@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  xp        Int      @default(0)
+  streak    Int      @default(0)
+  level     Int      @default(1)
+  createdAt DateTime @default(now())
+  lessons   Lesson[]
+  reports   Report[]
+  achievements Achievement[]
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  language    String
+  topic       String
+  messages    Message[]
+  report      Report?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  role      String   // "user" | "assistant"
+  content   String
+  aiModel   String?  // "gpt-4" | "claude" | "glm-4"
+  corrections Json?
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id           String   @id @default(uuid())
+  lessonId     String   @unique
+  lesson       Lesson   @relation(fields: [lessonId], references: [id])
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  accuracy     Float
+  grammarScore Float
+  vocabScore   Float
+  fluencyScore Float
+  errors       Json
+  suggestions  Json
+  createdAt    DateTime @default(now())
+}
+
+model Achievement {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  name      String
+  unlockedAt DateTime @default(now())
+}
